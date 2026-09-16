@@ -1,0 +1,371 @@
+/* Интерфейс намеренно скромный: программа для работы с документами, а не
+   витрина. Светлый фон, серая рамка вокруг листов, никаких теней и градиентов,
+   чтобы ничего не отвлекало от самого документа. */
+
+:root {
+  --bg: #f3f4f6;
+  --panel: #ffffff;
+  --line: #d9dce1;
+  --text: #1f2430;
+  --dim: #6b7280;
+  --dim-soft: #9aa1ab;
+  --accent: #1e5fbf;
+  --accent-soft: #e8f0fd;
+  --mark: #ffe066;
+  --mark-active: #ffab2e;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.45 -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow: hidden;
+}
+
+/* ---------- Панель инструментов ---------- */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  min-width: 0;
+}
+
+.tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+}
+.tool:hover { background: var(--accent-soft); color: var(--accent); }
+.tool:disabled { color: var(--dim-soft); cursor: default; background: none; }
+.tool.active { background: var(--accent-soft); color: var(--accent); border-color: var(--line); }
+
+.sep {
+  width: 1px;
+  height: 20px;
+  margin: 0 4px;
+  background: var(--line);
+}
+.spacer { flex: 1 1 auto; }
+
+.pager { display: inline-flex; align-items: baseline; gap: 4px; }
+.page-input {
+  width: 52px;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.page-total { color: var(--dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.zoom {
+  height: 26px;
+  padding: 0 4px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+}
+
+/* ---------- Поиск ---------- */
+.find {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+}
+.find[hidden] { display: none; }
+.find-input {
+  width: 200px;
+  height: 24px;
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  outline: none;
+}
+.find-status {
+  min-width: 62px;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* ---------- Раскладка ---------- */
+.body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-height: 0;
+}
+
+/* Колонки закреплены за элементами намеренно. Скрытая через display: none
+   панель перестаёт быть элементом сетки, и без явного указания область
+   просмотра занимала её колонку — ту, что подстраивается под содержимое.
+   Документ получал ширину листа вместо ширины окна, и «по ширине» не работало. */
+.sidebar { grid-column: 1; }
+.scroller { grid-column: 2; }
+
+.sidebar {
+  width: 216px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  border-right: 1px solid var(--line);
+  background: var(--panel);
+  min-height: 0;
+}
+.sidebar[hidden] { display: none; }
+
+.side-tabs { display: flex; border-bottom: 1px solid var(--line); }
+.side-tab {
+  flex: 1 1 0;
+  padding: 7px 4px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--dim);
+  font: inherit;
+  cursor: pointer;
+}
+.side-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.thumbs {
+  overflow-y: auto;
+  padding: 10px;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  align-content: start;
+}
+.thumbs[hidden] { display: none; }
+
+.thumb {
+  position: relative;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  line-height: 0;
+  /* clip, а не hidden: hidden делает плитку контейнером прокрутки, и её
+     минимальная высота обнуляется — соседние ряды начинают наезжать. */
+  overflow: clip;
+}
+.thumb canvas, .thumb .ph { display: block; width: 100% !important; height: auto !important; }
+.thumb .ph { aspect-ratio: var(--page-aspect, 1 / 1.414); background: var(--bg); }
+.thumb .num {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--dim);
+  font-size: 10px;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+.thumb.current { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.thumb.current .num { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.outline { overflow: auto; padding: 8px 6px; }
+.outline[hidden] { display: none; }
+.outline-item {
+  display: block;
+  width: 100%;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.outline-item:hover { background: var(--accent-soft); color: var(--accent); }
+.outline-empty { padding: 10px 8px; color: var(--dim); }
+
+/* ---------- Лента страниц ---------- */
+.scroller {
+  position: relative;
+  overflow: auto;
+  outline: none;
+  background: var(--bg);
+}
+.sheet { position: relative; }
+
+.page {
+  position: absolute;
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+.page canvas { display: block; width: 100%; height: 100%; }
+
+/* Слой текста лежит поверх картинки: сам он прозрачный, но именно его выделяет
+   мышь и подсвечивает поиск.
+   Правила ниже — контракт pdf.js, а не украшение. Библиотека расставляет спаны
+   в процентах от страницы и кладёт каждому переменную --font-height в единицах
+   документа, а переводить её в пиксели должен стиль. Без этого спаны получали
+   размер шрифта интерфейса: слой оказывался втрое мельче нарисованного текста,
+   выделение хватало не те буквы, а подсветка поиска висела над словом. */
+.text-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  line-height: 1;
+  text-align: initial;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  caret-color: transparent;
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+}
+.text-layer :is(span, br) {
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  color: transparent;
+  transform-origin: 0 0;
+}
+.text-layer > :not(.markedContent),
+.text-layer .markedContent span:not(.markedContent) {
+  z-index: 1;
+  --font-height: 0;
+  --scale-x: 1;
+  --rotate: 0deg;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+.text-layer .markedContent { display: contents; }
+
+.text-layer span::selection { background: rgba(30, 95, 191, 0.3); }
+
+/* Подсветка полупрозрачная: текст нарисован на канве под слоем, и плотная
+   заливка просто закрыла бы найденное слово. */
+.text-layer mark {
+  background: rgba(255, 213, 79, 0.45);
+  color: transparent;
+  border-radius: 2px;
+}
+.text-layer mark.active { background: rgba(255, 145, 0, 0.45); }
+
+/* ---------- Пустой экран ---------- */
+.empty {
+  position: fixed;
+  inset: 41px 0 0 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+}
+.empty[hidden] { display: none; }
+.empty-card { width: min(420px, 80vw); text-align: center; }
+.empty-card h1 { margin: 0 0 6px; font-size: 22px; font-weight: 600; }
+.empty-card p { margin: 0 0 16px; color: var(--dim); }
+
+.empty-recent {
+  margin-top: 20px;
+  display: grid;
+  gap: 2px;
+  text-align: left;
+}
+.recent-item {
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.recent-item:hover { background: var(--accent-soft); color: var(--accent); }
+.recent-title { color: var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; padding: 0 8px 4px; }
+
+/* ---------- Кнопки и окна ---------- */
+button.primary {
+  padding: 7px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+button.primary:hover { background: #17509f; }
+button.plain {
+  padding: 7px 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.28);
+}
+.modal[hidden] { display: none; }
+.modal-card {
+  width: min(360px, 86vw);
+  padding: 18px;
+  border-radius: 8px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+.modal-card h2 { margin: 0 0 14px; font-size: 15px; font-weight: 600; }
+.radio { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+.num {
+  width: 64px;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  font: inherit;
+}
+.error { margin: 4px 0 0; color: #b42318; }
+.error[hidden] { display: none; }
+.modal-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }

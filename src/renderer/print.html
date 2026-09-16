@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self' file: blob: data:; script-src 'self' file: blob:; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data: blob:; font-src 'self' file: data:; connect-src 'self' file: data: blob:; worker-src 'self' file: blob:; object-src 'none'; base-uri 'none';"
+    />
+    <title>Печать</title>
+    <style>
+      /* Лист бумаги подгоняем под страницу документа и убираем поля: иначе
+         Chromium добавит свои и уменьшит содержимое, а по краям появятся
+         колонтитулы с адресом файла. */
+      html, body { margin: 0; padding: 0; background: #fff; }
+      .sheet { break-after: page; page-break-after: always; }
+      .sheet:last-child { break-after: auto; page-break-after: auto; }
+      .sheet img { display: block; width: 100%; height: auto; }
+    </style>
+  </head>
+  <body>
+    <div id="sheets"></div>
+    <script type="module" src="print.js"></script>
+  </body>
+</html>

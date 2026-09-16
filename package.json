@@ -1,0 +1,79 @@
+{
+  "name": "pdfreader",
+  "version": "0.1.0",
+  "description": "PDF reader for office use: continuous scrolling, search, printing",
+  "main": "src/main/main.js",
+  "author": {
+    "name": "Ilya Pautov",
+    "email": "djdrise@gmail.com"
+  },
+  "license": "MIT",
+  "scripts": {
+    "start": "node scripts/start.js",
+    "dev": "node scripts/start.js --dev",
+    "check": "node scripts/check.js",
+    "test": "node --test test/*.test.js",
+    "sample": "node scripts/make-sample.js",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:linux": "electron-builder --linux"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^5.4.149"
+  },
+  "devDependencies": {
+    "electron": "^38.2.2",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "dev.pautov.pdfreader",
+    "productName": "PDFReader",
+    "files": [
+      "assets/**/*",
+      "src/**/*",
+      "scripts/start.js",
+      "node_modules/pdfjs-dist/legacy/build/pdf.mjs",
+      "node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs",
+      "node_modules/pdfjs-dist/cmaps/**/*",
+      "node_modules/pdfjs-dist/standard_fonts/**/*",
+      "node_modules/pdfjs-dist/wasm/**/*",
+      "node_modules/pdfjs-dist/iccs/**/*",
+      "node_modules/pdfjs-dist/package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Office",
+      "synopsis": "PDF reader with continuous scrolling, search and printing",
+      "description": "PDF reader for office use: continuous scrolling, text search, printing, outline and thumbnails"
+    },
+    "fileAssociations": [
+      {
+        "ext": "pdf",
+        "name": "PDFReader.pdf",
+        "description": "Документ PDF",
+        "mimeType": "application/pdf",
+        "role": "Viewer"
+      }
+    ],
+    "asar": true,
+    "artifactName": "${productName}-${version}-${arch}.${ext}",
+    "nsis": {
+      "artifactName": "${productName}-${version}-Setup-${arch}.${ext}"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-portable-${arch}.${ext}"
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
