@@ -1,210 +1,245 @@
 # Pagio
 
-Просмотрщик PDF для работы с документами: непрерывная прокрутка, поиск по
-тексту, печать, оглавление, миниатюры и показ на весь экран. Устроен по образцу
-SumatraPDF — окно занято документом, а не панелями.
+**English** · [Русский](README.ru.md)
 
-Windows, macOS и Linux. Лицензия MIT.
+[![Latest release](https://img.shields.io/github/v/release/djdrise/Pagio?label=release)](https://github.com/djdrise/Pagio/releases/latest)
+[![Check](https://github.com/djdrise/Pagio/actions/workflows/check.yml/badge.svg)](https://github.com/djdrise/Pagio/actions/workflows/check.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-## Что умеет
+A PDF reader for working with documents: continuous scrolling, text search,
+printing, an outline, thumbnails and a full-screen show. Modelled on
+SumatraPDF — the window belongs to the document, not to the panels.
 
-* **Вкладки.** Несколько документов в одном окне: у каждой вкладки свои
-  страницы, масштаб, миниатюры, оглавление, поиск и место прокрутки. Две
-  последние вкладки держат страницы нарисованными и открываются мгновенно,
-  остальные перерисовывают их при возвращении — за десятые доли секунды и
-  без потери места. Уже открытый файл не открывается второй раз, окно просто
-  переходит к нему.
-* **Непрерывная лента страниц.** Документ прокручивается целиком, границы
-  страниц видны. В памяти живут только те страницы, что сейчас на экране, плюс
-  небольшой запас, — документ на тысячу страниц открывается так же быстро, как
-  на десять.
-* **Масштаб** по ширине, страница целиком или заданный вручную; колесом с
-  <kbd>Ctrl</kbd> — с сохранением точки под курсором.
-* **Поворот страниц** — кнопка рядом с масштабом или
-  <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd>, влево —
-  <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>. Сканы часто приходят лёжа, и
-  без этого их не прочесть; поворот запоминается вместе со страницей и
-  масштабом, а на печать документ уходит повёрнутым так же, как на экране.
-* **Поиск по тексту** с подсветкой всех совпадений и переходом между ними.
-  Регистр не важен, «ё» и «е» считаются одной буквой.
-* **Выделение и копирование текста** мышью — поверх страницы лежит настоящий
-  текстовый слой.
-* **Боковая панель**: миниатюры страниц и оглавление документа.
-* **Печать** всего документа или диапазона страниц через системный диалог.
-  На бумагу идёт сам документ, а не окно программы.
-* **Полноэкранный режим** по <kbd>F11</kbd>.
-* **Показ** по <kbd>F5</kbd> или <kbd>Ctrl</kbd>+<kbd>L</kbd>: окно без рамок и
-  панелей, одна страница на весь экран, листание клавишами, щелчком и колесом.
-  Выход по <kbd>Esc</kbd> возвращает прежний масштаб и оставляет на той
-  странице, где показ закончили. Пропорция слайда редко совпадает с экраном, и
-  по краям остаётся пустота — в параметрах выбирается, заливать её чёрным (по
-  умолчанию) или белым: для слайдов на белом фоне рамок тогда не видно вовсе.
-* **Параметры** — кнопка с шестерёнкой в панели или «Вид → Параметры…»: фон
-  показа и язык программы. Хранятся рядом с недавними файлами, в
-  `settings.json`.
-* **Недавние документы** — на пустом экране и в меню «Файл». Рядом с именем
-  стоит, когда файл открывали: у сегодняшнего время, у прошлогоднего год, а
-  число с месяцем — между тем и другим. Полная дата есть в подсказке под
-  курсором, вместе с путём. Файлов, которых больше нет на диске, в списке нет.
-* **Русский и английский** интерфейс. Переключается в параметрах и меняется
-  сразу — вместе с меню, подсказками и уже показанным результатом поиска.
-* **Справка** — кнопка со знаком вопроса: короткое описание и основные
-  сочетания клавиш, не выходя из программы.
-* Запоминает, на какой странице и в каком масштабе вы закончили читать.
+Windows · macOS · Linux (Electron + pdf.js). MIT licence.
 
-## Управление
+## Install
 
-| Клавиши | Действие |
+Prebuilt installers are on the
+[Releases](https://github.com/djdrise/Pagio/releases) page: `.dmg` for macOS
+(Apple Silicon and Intel separately), `.exe` for Windows (installer and
+portable), `.AppImage` and `.deb` for Linux.
+
+The builds are ad-hoc signed but neither notarized by Apple nor covered by a
+Windows certificate, so the first launch needs a nudge:
+
+* **macOS** — System Settings → Privacy & Security, find the message about
+  Pagio and click “Open Anyway”. On macOS 14 and earlier, right-clicking the
+  app → “Open” works too. If macOS claims the app is damaged, clear the
+  quarantine flag: `xattr -dr com.apple.quarantine /Applications/Pagio.app`
+* **Windows** — SmartScreen warns: “More info” → “Run anyway”.
+* **Linux** — make the AppImage executable: `chmod +x Pagio-*.AppImage`.
+
+## What it does
+
+* **Tabs.** Several documents in one window, each tab with its own pages, zoom,
+  thumbnails, outline, search and scroll position. The two most recent tabs
+  keep their pages rendered and come back instantly; the rest redraw on return,
+  in a fraction of a second and without losing the place. A file that is
+  already open is not opened twice — the window simply switches to it.
+* **A continuous ribbon of pages.** The document scrolls as a whole, with page
+  boundaries visible. Only the pages on screen live in memory, plus a small
+  margin, so a thousand-page document opens as fast as a ten-page one.
+* **Zoom** to width, to whole page, or to a value you pick; with
+  <kbd>Ctrl</kbd> and the wheel the point under the cursor stays put.
+* **Page rotation** — the button next to the zoom control, or
+  <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd>; counter-clockwise is
+  <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>. Scans often arrive lying on
+  their side and cannot be read otherwise. The rotation is remembered along
+  with the page and the zoom, and the document prints the way it looks.
+* **Text search** highlighting every match and stepping between them. Case is
+  ignored, and Russian “ё” and “е” count as one letter.
+* **Selecting and copying text** with the mouse — a real text layer sits on top
+  of the page.
+* **Sidebar** with page thumbnails and the document outline.
+* **Printing** the whole document or a range of pages through the system
+  dialog. What goes on paper is the document itself, not the application
+  window.
+* **Full screen** on <kbd>F11</kbd>.
+* **Show** on <kbd>F5</kbd> or <kbd>Ctrl</kbd>+<kbd>L</kbd>: no frame, no
+  panels, one page per screen, paged with the keyboard, a click or the wheel.
+  Leaving with <kbd>Esc</kbd> restores the previous zoom and keeps you on the
+  page where the show ended. A slide rarely matches the shape of the screen,
+  so bands are left along the edges — the settings choose whether to fill them
+  black (the default) or white, and on white slides the frame disappears
+  entirely.
+* **Settings** — the gear button in the toolbar or View → Settings…: show
+  background, whether to reopen last session's tabs, and the interface
+  language. They are kept next to the recent files, in `settings.json`.
+* **Recent documents** — on the empty screen and in the File menu. Next to the
+  name is when the file was opened: the time for today, the year for last year,
+  and the day with the month in between. The full date is in the tooltip,
+  together with the path. Files that no longer exist on disk are dropped from
+  the list.
+* **English and Russian** interface. Switched in the settings and applied at
+  once — menu, tooltips and an already displayed search result included.
+* **Help** — the question-mark button: a short description and the main
+  keyboard shortcuts, without leaving the program.
+* Remembers the page and the zoom you stopped reading at.
+
+## Keys
+
+| Keys | Action |
 | --- | --- |
-| <kbd>↓</kbd> <kbd>↑</kbd>, колесо | прокрутка |
-| <kbd>PageDown</kbd> <kbd>PageUp</kbd>, <kbd>Пробел</kbd> | экран вперёд / назад |
-| <kbd>→</kbd> <kbd>←</kbd> | следующая / предыдущая страница |
-| <kbd>Home</kbd> <kbd>End</kbd> | в начало / в конец |
-| <kbd>Ctrl</kbd>+<kbd>F</kbd>, <kbd>F3</kbd> | найти, следующее совпадение |
-| <kbd>Ctrl</kbd>+<kbd>=</kbd> <kbd>Ctrl</kbd>+<kbd>-</kbd> <kbd>Ctrl</kbd>+<kbd>0</kbd> | масштаб |
-| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> | повернуть вправо / влево |
-| <kbd>Ctrl</kbd>+<kbd>O</kbd>, <kbd>Ctrl</kbd>+<kbd>P</kbd> | открыть, печать |
-| <kbd>Ctrl</kbd>+<kbd>W</kbd> | закрыть вкладку (средняя кнопка мыши — то же) |
-| <kbd>Ctrl</kbd>+<kbd>Tab</kbd> | следующая вкладка, с <kbd>Shift</kbd> — предыдущая |
-| <kbd>F4</kbd> | боковая панель |
-| <kbd>F11</kbd> | во весь экран |
-| <kbd>F5</kbd>, <kbd>Ctrl</kbd>+<kbd>L</kbd> | показ: одна страница на весь экран |
-| <kbd>Esc</kbd> | закрыть поиск, выйти из показа и полноэкранного режима |
+| <kbd>↓</kbd> <kbd>↑</kbd>, wheel | scroll |
+| <kbd>PageDown</kbd> <kbd>PageUp</kbd>, <kbd>Space</kbd> | one screen forward / back |
+| <kbd>→</kbd> <kbd>←</kbd> | next / previous page |
+| <kbd>Home</kbd> <kbd>End</kbd> | to the beginning / to the end |
+| <kbd>Ctrl</kbd>+<kbd>F</kbd>, <kbd>F3</kbd> | find, next match |
+| <kbd>Ctrl</kbd>+<kbd>=</kbd> <kbd>Ctrl</kbd>+<kbd>-</kbd> <kbd>Ctrl</kbd>+<kbd>0</kbd> | zoom |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> | rotate right / left |
+| <kbd>Ctrl</kbd>+<kbd>O</kbd>, <kbd>Ctrl</kbd>+<kbd>P</kbd> | open, print |
+| <kbd>Ctrl</kbd>+<kbd>W</kbd> | close the tab (the middle mouse button does the same) |
+| <kbd>Ctrl</kbd>+<kbd>Tab</kbd> | next tab, with <kbd>Shift</kbd> the previous one |
+| <kbd>F4</kbd> | sidebar |
+| <kbd>F11</kbd> | full screen |
+| <kbd>F5</kbd>, <kbd>Ctrl</kbd>+<kbd>L</kbd> | show: one page per screen |
+| <kbd>Esc</kbd> | close find, leave the show and full screen |
 
-В показе клавиши листают страницами, а не экранами: <kbd>→</kbd> <kbd>↓</kbd>
-<kbd>PageDown</kbd> <kbd>Пробел</kbd> <kbd>Enter</kbd> — вперёд, <kbd>←</kbd>
-<kbd>↑</kbd> <kbd>PageUp</kbd> <kbd>Backspace</kbd> — назад. То же делают
-щелчок по странице и колесо мыши.
+In the show the keys move by pages rather than by screens: <kbd>→</kbd>
+<kbd>↓</kbd> <kbd>PageDown</kbd> <kbd>Space</kbd> <kbd>Enter</kbd> go forward,
+<kbd>←</kbd> <kbd>↑</kbd> <kbd>PageUp</kbd> <kbd>Backspace</kbd> go back. A
+click on the page and the mouse wheel do the same.
 
-## Запуск из исходников
+## Running from source
 
-Node.js 20 или новее.
+Node.js 20 or newer.
 
 ```bash
 npm install
-npm start                 # открыть пустое окно
-npm start -- файл.pdf     # сразу с документом
-npm run dev               # то же плюс инструменты разработчика в меню
+npm start                 # open an empty window
+npm start -- file.pdf     # straight to a document
+npm run dev               # the same, plus developer tools in the menu
 ```
 
-Тестовый документ для проверок собирается на месте:
+> `npm start` goes through `scripts/start.js`. The VS Code terminal exports
+> `ELECTRON_RUN_AS_NODE=1`, and with it the Electron binary starts as plain
+> Node and the app fails. The launcher clears that variable.
+
+A test document is built on the spot:
 
 ```bash
-npm run sample            # sample.pdf, 60 страниц, со страницами разной высоты
+npm run sample            # sample.pdf, 60 pages of varying height
 ```
 
-## Проверки
+## Checks
 
 ```bash
-npm run check   # синтаксис всех исходников
-npm test        # тесты чистой логики: раскладка ленты и поиск
+npm run check   # syntax of every source file
+npm test        # tests for the pure logic: ribbon layout and search
 ```
 
-То же самое GitHub Actions прогоняет на каждый push в `main` и на каждый
-pull request.
+GitHub Actions runs both on every push to `main` and on every pull request.
 
-Тестами покрыто то, что плохо проверяется руками: арифметика прокрутки
-(смещения страниц, видимый диапазон, привязка точки при зуме), разбор текста
-для поиска (регистр, «ё», совпадения на границе кусков текста) и давность
-открытия (границы суток и года — иначе для проверки пришлось бы переводить
-часы).
+The tests cover what is awkward to check by hand: the scrolling arithmetic
+(page offsets, the visible range, holding the anchor point while zooming), the
+text parsing behind search (case, “ё”, matches straddling the boundary between
+text chunks) and how recently a file was opened (the day and year boundaries —
+verifying those by hand would mean moving the clock).
 
-## Сборка
+## Building installers
 
 ```bash
-npm run dist:mac     # dmg и zip
-npm run dist:win     # установщик и портативная версия
-npm run dist:linux   # AppImage и deb
+npm run dist:mac     # dmg and zip
+npm run dist:win     # installer and portable
+npm run dist:linux   # AppImage and deb
 ```
 
-Готовый релиз собирается на GitHub Actions по тегу — и сразу под все три
-системы:
+electron-builder only builds for the host OS, so releases are built on GitHub
+Actions — one job per system. The
+[`release.yml`](.github/workflows/release.yml) workflow fires on a `v*` tag:
 
 ```bash
 git tag v0.1.0 && git push origin v0.1.0
 ```
 
-Значки собираются из двух исходных SVG и лежат в репозитории готовыми —
-пересобирать их нужно только после правки самих SVG:
+## Icons
+
+The icons are generated from two source SVGs and committed ready-made — they
+only need rebuilding after the SVGs themselves change:
 
 ```bash
 npm run icons
 ```
 
-Растеризует их сам Electron (он уже есть в зависимостях), поэтому ничего
-доустанавливать не нужно. Из `assets/icon.svg` — знак Pagio: плотная плашка 46×46 с центром в (32, 32), в
-которой прорезаны две строки. Прорези сделаны правилом `evenodd`, то есть
-насквозь, а не залиты цветом подложки: сквозь них видно саму плитку, и один файл
-годится для любого фона. Толщина строк (6) и перемычка между ними (10) подобраны
-под 16 пикселей — в этом размере обе строки ещё различимы. Из него получаются
-значки программы:
-`build/icon.ico` для Windows, `build/icons/` для Linux, `build/icon.icns` для
-macOS (если рядом есть `iconutil`) и `assets/icon-256.png` для окна во время
-работы. Из `assets/icon-file.svg` — `build/icon-file.ico` и `build/icon-file.icns`,
-значок PDF-файлов, связанных с программой: в проводнике документ и программа
-должны различаться с одного взгляда. На Linux значок файла задаётся темой
-оформления по типу `application/pdf`, поэтому там он берётся не из этого файла.
+Electron rasterizes them itself (it is already a dependency), so nothing extra
+has to be installed. From `assets/icon.svg` comes the Pagio mark: a solid
+46×46 tile centred on (32, 32) with two lines cut out of it. The cuts use the
+`evenodd` rule, so they go right through rather than being filled with the
+background colour: the tile itself shows through them and one file suits any
+backdrop. The line thickness (6) and the bridge between them (10) are tuned for
+16 pixels — at that size both lines are still distinct. It yields the
+application icons: `build/icon.ico` for Windows, `build/icons/` for Linux,
+`build/icon.icns` for macOS (when `iconutil` is at hand) and
+`assets/icon-256.png` for the window at runtime. From `assets/icon-file.svg`
+come `build/icon-file.ico` and `build/icon-file.icns`, the icon for PDF files
+associated with the program: in a file manager the document and the application
+have to be told apart at a glance. On Linux the file icon comes from the
+desktop theme by `application/pdf` type, so it is not taken from this file
+there.
 
-Варианты знака, из которых выбран нынешний, лежат в `assets/logo.html` —
-откройте в браузере. В поставку эта страница не попадает.
+The variants the current mark was chosen from are in `assets/logo.html` — open
+it in a browser. That page is not shipped.
 
-## Устройство
+## Layout
 
 ```
-src/main/main.js              окно, вкладки, меню, чтение файла, печать, кэш миниатюр
-src/main/lib/recent.js        список недавних файлов
-src/main/lib/menu-strings.js  строки меню и системных диалогов, два языка
-src/main/lib/thumbcache.js    имена и вытеснение миниатюр на диске
-src/preload/preload.js        мост между окном и главным процессом
-src/renderer/viewer.js        вкладки, лента страниц, масштаб, панель, поиск, показ
-src/renderer/print.js         отрисовка страниц для печати
-src/renderer/lib/pdfdoc.js    обёртка над pdf.js, кэш разобранных страниц
-src/renderer/lib/scrolllayout.mjs  арифметика непрерывной ленты
-src/renderer/lib/search.mjs   разбор текста и поиск совпадений
-src/renderer/lib/strings.mjs  строки окна, два языка
-src/renderer/lib/when.mjs     давность открытия: время, дата или год
-src/renderer/lib/renderqueue.js    очередь отрисовки
-src/renderer/lib/thumbstore.js     миниатюры в памяти
-scripts/make-icons.js         значки программы и документов из SVG
-assets/icon.svg               знак программы
-assets/icon-file.svg          знак связанного документа
-assets/logo.html              варианты знака, из которых выбран нынешний
+src/main/main.js              window, tabs, menu, file reading, printing, thumbnail cache
+src/main/lib/recent.js        the list of recent files
+src/main/lib/menu-strings.js  menu and system dialog strings, two languages
+src/main/lib/thumbcache.js    naming and eviction of thumbnails on disk
+src/preload/preload.js        the bridge between the window and the main process
+src/renderer/viewer.js        tabs, page ribbon, zoom, sidebar, search, show
+src/renderer/print.js         rendering pages for printing
+src/renderer/lib/pdfdoc.js    a wrapper over pdf.js, cache of parsed pages
+src/renderer/lib/scrolllayout.mjs  the arithmetic of the continuous ribbon
+src/renderer/lib/search.mjs   text parsing and matching
+src/renderer/lib/strings.mjs  window strings, two languages
+src/renderer/lib/when.mjs     how long ago a file was opened: time, date or year
+src/renderer/lib/renderqueue.js    the render queue
+src/renderer/lib/thumbstore.js     thumbnails in memory
+scripts/make-icons.js         application and document icons from SVG
+assets/icon.svg               the application mark
+assets/icon-file.svg          the mark for associated documents
+assets/logo.html              the variants the current mark was chosen from
 ```
 
-Параметры программы живут в главном процессе и приходят в окно при запуске.
-Значения проверяются на входе по белому списку: файл настроек правят руками, и
-мусор из него до окна не доходит.
+The settings live in the main process and reach the window at startup. Values
+are validated against an allow-list on the way in: the settings file gets
+edited by hand, and rubbish from it never reaches the window.
 
-Строк на двух языках два набора, по одному на процесс: меню собирается в
-главном, интерфейс — в окне, а общих строк между ними всего несколько. Связать
-их одним файлом не выйдет без сборки — главный процесс на CommonJS, окно на
-ES-модулях. Русские строки лежат ещё и в самой разметке: если ключ потеряется,
-окно останется читаемым. В окне переводится не по атрибутам, разбросанным по
-разметке, а по одной таблице соответствий в `viewer.js` — забытый элемент видно
-сразу. Состояние поиска хранится частями («столько-то из столько-то»), а не
-готовой строкой: иначе при смене языка оно осталось бы на прежнем.
+There are two sets of strings, one per process: the menu is assembled in the
+main process and the interface in the window, and the two share only a handful
+of strings. Tying them to a single file is impossible without a build step —
+the main process is CommonJS, the window is ES modules. The Russian strings
+also sit in the markup itself: if a key goes missing, the window stays
+readable. The window is translated not through attributes scattered across the
+markup but through a single lookup table in `viewer.js` — a forgotten element
+shows up immediately. Search state is kept in parts (“so many of so many”)
+rather than as a finished string; otherwise it would stay in the old language
+after a switch.
 
-Открытый документ живёт в двух местах сразу: главный процесс помнит про него
-только путь и размер, а окно держит разобранный PDF и нарисованные страницы.
-Вкладка — это пара таких состояний, связанных общим `id`; закрытие вкладки
-освобождает и то, и другое.
+An open document lives in two places at once: the main process remembers only
+its path and size, while the window holds the parsed PDF and the rendered
+pages. A tab is a pair of such states tied by a shared `id`; closing the tab
+releases both.
 
-Файлы `.mjs` — чистая логика без DOM: их одинаково читают и окно программы, и
-`node --test`, поэтому она покрыта тестами без сборки и без дублирования.
+The `.mjs` files are pure logic without the DOM: the window and `node --test`
+read them alike, so that logic is covered by tests with no build step and no
+duplication.
 
-Документ не читается в память целиком: окно узнаёт только его размер, а байты
-берёт кусками через главный процесс по мере надобности. На больших файлах это
-заметно и по памяти, и по времени открытия.
+The document is never read into memory whole: the window learns only its size
+and fetches the bytes in chunks through the main process as needed. On large
+files this shows in both memory and opening time.
 
-Память держат канвы, а не разметка: страница в масштабе «по ширине» весит
-десятки мегабайт, миниатюра — около мегабайта. Поэтому канвы отпускаются сразу,
-как перестают быть нужными: страницы — за пределами видимого и в давно
-покинутых вкладках, миниатюры — когда уезжают из панели (сама картинка
-остаётся в `ThumbStore` и возвращается без перерисовки). Восемь открытых
-документов по 400–1000 страниц держат около 80 МБ канв, и эта величина не
-растёт ни от числа вкладок, ни от того, сколько миниатюр пролистали.
+Memory is held by canvases, not by the markup: a page at fit-width weighs tens
+of megabytes, a thumbnail about one. Canvases are therefore released as soon as
+they stop being needed — pages outside the visible range and in long-abandoned
+tabs, thumbnails once they leave the panel (the picture itself stays in
+`ThumbStore` and comes back without redrawing). Eight open documents of
+400–1000 pages hold about 80 MB of canvases, and that figure grows neither with
+the number of tabs nor with how many thumbnails have been scrolled past.
 
-## Зависимости
+## Dependencies
 
-* [pdf.js](https://github.com/mozilla/pdf.js) — разбор и отрисовка PDF, Apache-2.0
-* [Electron](https://www.electronjs.org/) — оболочка приложения, MIT
+* [pdf.js](https://github.com/mozilla/pdf.js) — PDF parsing and rendering, Apache-2.0
+* [Electron](https://www.electronjs.org/) — the application shell, MIT
