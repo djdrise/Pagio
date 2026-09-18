@@ -1,7 +1,7 @@
 {
-  "name": "pdfreader",
+  "name": "pagio",
   "version": "0.1.0",
-  "description": "PDF reader for office use: continuous scrolling, search, printing",
+  "description": "Pagio: просмотрщик PDF для работы с документами — непрерывная лента, поиск, печать, показ",
   "main": "src/main/main.js",
   "author": {
     "name": "Ilya Pautov",
@@ -15,8 +15,10 @@
     "test": "node --test test/*.test.js",
     "sample": "node scripts/make-sample.js",
     "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac",
     "dist:win": "electron-builder --win",
-    "dist:linux": "electron-builder --linux"
+    "dist:linux": "electron-builder --linux",
+    "icons": "node scripts/make-icons.js"
   },
   "dependencies": {
     "pdfjs-dist": "^5.4.149"
@@ -26,10 +28,11 @@
     "electron-builder": "^25.1.8"
   },
   "build": {
-    "appId": "dev.pautov.pdfreader",
-    "productName": "PDFReader",
+    "appId": "dev.pautov.pagio",
+    "productName": "Pagio",
     "files": [
       "assets/**/*",
+      "!assets/logo.html",
       "src/**/*",
       "scripts/start.js",
       "node_modules/pdfjs-dist/legacy/build/pdf.mjs",
@@ -40,11 +43,20 @@
       "node_modules/pdfjs-dist/iccs/**/*",
       "node_modules/pdfjs-dist/package.json"
     ],
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.icns"
+    },
     "win": {
       "target": [
         "nsis",
         "portable"
-      ]
+      ],
+      "icon": "build/icon.ico"
     },
     "linux": {
       "target": [
@@ -52,16 +64,18 @@
         "deb"
       ],
       "category": "Office",
-      "synopsis": "PDF reader with continuous scrolling, search and printing",
-      "description": "PDF reader for office use: continuous scrolling, text search, printing, outline and thumbnails"
+      "synopsis": "Pagio — PDF reader with continuous scrolling, search, printing and slideshow",
+      "description": "Pagio: PDF reader for office use — continuous scrolling, text search, printing, outline, thumbnails and full-screen slideshow",
+      "icon": "build/icons"
     },
     "fileAssociations": [
       {
         "ext": "pdf",
-        "name": "PDFReader.pdf",
+        "name": "Pagio.pdf",
         "description": "Документ PDF",
         "mimeType": "application/pdf",
-        "role": "Viewer"
+        "role": "Viewer",
+        "icon": "build/icon-file"
       }
     ],
     "asar": true,

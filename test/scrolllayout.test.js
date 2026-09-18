@@ -42,6 +42,61 @@ test('страницы разной высоты не сбивают смеще�
   assert.equal(pages[2].top, PADDING + 792 + GAP + 1008 + GAP);
 });
 
+test('anchor ставит страницу в начало вида, а не под поле', async () => {
+  const { layoutPages, GAP } = await load();
+  const { pages } = layoutPages(sizes(3), { scale: 1, viewportWidth: 1000 });
+
+  assert.equal(pages[0].anchor, 0, 'первая страница видна целиком с самого верха');
+  assert.equal(pages[1].anchor, 792 + GAP);
+});
+
+test('в показе под каждую страницу отведён ровно экран', async () => {
+  const { layoutPages } = await load();
+  const slide = 900;
+  const { pages, totalHeight } = layoutPages(sizes(4), {
+    scale: 1,
+    viewportWidth: 1400,
+    gap: 0,
+    padding: 0,
+    slide,
+  });
+
+  assert.deepEqual(
+    pages.map((p) => p.anchor),
+    [0, slide, slide * 2, slide * 3],
+  );
+  assert.equal(totalHeight, slide * 4, 'лишней пустоты в конце быть не должно');
+});
+
+test('слайд 16:9 на экране другой пропорции не пускает в кадр соседа', async () => {
+  const { layoutPages, fitScale } = await load();
+  // Слайд 16:9 на экране 16:10: по высоте страница до края не достаёт, и
+  // раньше в остаток снизу заглядывала следующая.
+  const slide169 = { width: 960, height: 540 };
+  const view = { width: 1470, height: 923 };
+  const box = { gap: 0, padding: 0, slide: view.height };
+  const scale = fitScale(slide169, view, 'page', box);
+  const { pages } = layoutPages([slide169, slide169], {
+    scale,
+    viewportWidth: view.width,
+    ...box,
+  });
+
+  const [first, second] = pages;
+  assert.ok(first.height < view.height, 'проверяем именно случай, когда страница ниже экрана');
+
+  // Встали на первую страницу: её видно целиком, второй не видно вовсе.
+  const screen = { top: first.anchor, bottom: first.anchor + view.height };
+  assert.ok(first.top >= screen.top, 'верх страницы не должен уезжать за край экрана');
+  assert.ok(first.top + first.height <= screen.bottom, 'низ страницы должен помещаться');
+  assert.ok(second.top >= screen.bottom, 'следующая страница обязана быть за краем экрана');
+
+  // И стоит по центру: пустота сверху и снизу поровну.
+  const above = first.top - screen.top;
+  const below = screen.bottom - (first.top + first.height);
+  assert.ok(Math.abs(above - below) <= 1, `поля неравные: ${above} и ${below}`);
+});
+
 test('видимыми считаются только страницы в окне и запасе', async () => {
   const { layoutPages, visibleRange } = await load();
   const { pages } = layoutPages(sizes(50), { scale: 1, viewportWidth: 1000 });

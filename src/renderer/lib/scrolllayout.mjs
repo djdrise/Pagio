@@ -15,22 +15,47 @@ export const PADDING = 16;
 
 /**
  * Считает положение каждой страницы в ленте.
+ *
+ * У каждой страницы, кроме её прямоугольника, есть anchor — прокрутка, при
+ * которой страница стоит «в начале вида». Это не то же самое, что top: в ленте
+ * над страницей ещё поле, а в показе — половина пустоты, на которую страница
+ * не дотянулась. Считать это на месте вызова значит рано или поздно разойтись
+ * с раскладкой, поэтому величина живёт здесь, рядом с самой раскладкой.
+ *
  * @param {{width: number, height: number}[]} sizes размеры страниц при масштабе 1
- * @param {{scale: number, viewportWidth: number, gap?: number, padding?: number}} opts
- * @returns {{pages: {top: number, left: number, width: number, height: number}[],
- *            totalHeight: number, totalWidth: number}}
+ * @param {{scale: number, viewportWidth: number, gap?: number, padding?: number,
+ *          slide?: number}} opts slide — высота экрана в режиме показа
+ * @returns {{pages: {top: number, left: number, width: number, height: number,
+ *            anchor: number}[], totalHeight: number, totalWidth: number}}
  */
-export function layoutPages(sizes, { scale, viewportWidth, gap = GAP, padding = PADDING }) {
+export function layoutPages(sizes, { scale, viewportWidth, gap = GAP, padding = PADDING, slide = 0 }) {
   const pages = [];
   let top = padding;
   let widest = 0;
+  let cell = 0;
 
   for (const size of sizes) {
     const width = Math.max(1, Math.round(size.width * scale));
     const height = Math.max(1, Math.round(size.height * scale));
     widest = Math.max(widest, width);
-    pages.push({ top, left: 0, width, height });
-    top += height + gap;
+
+    if (slide) {
+      // Показ: под каждую страницу отведён ровно экран, страница стоит в нём по
+      // центру. Без этого страница, которая шире экрана по пропорции (слайд
+      // 16:9 на экране 16:10), не занимала бы его по высоте, и снизу выглядывал
+      // бы край следующей — вместо одного слайда получалось бы полтора.
+      pages.push({
+        top: cell + Math.max(0, Math.round((slide - height) / 2)),
+        left: 0,
+        width,
+        height,
+        anchor: cell,
+      });
+      cell += slide;
+    } else {
+      pages.push({ top, left: 0, width, height, anchor: top - padding });
+      top += height + gap;
+    }
   }
 
   // Узкий документ стоит по центру окна, широкий прижат к левому краю и
@@ -42,7 +67,7 @@ export function layoutPages(sizes, { scale, viewportWidth, gap = GAP, padding = 
 
   return {
     pages,
-    totalHeight: pages.length ? top - gap + padding : padding * 2,
+    totalHeight: slide ? cell : pages.length ? top - gap + padding : padding * 2,
     totalWidth: Math.max(viewportWidth, contentWidth),
   };
 }

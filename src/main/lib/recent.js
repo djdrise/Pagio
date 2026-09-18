@@ -9,15 +9,19 @@
 const LIMIT = 12;
 
 /**
- * Добавляет файл в начало списка.
- * @param {{path: string, name: string}[]} list
+ * Добавляет файл в начало списка и помечает временем открытия. Повторное
+ * открытие метку обновляет: в списке стоит время последнего раза, а не первого.
+ * Записи, сделанные до появления метки, остаются без неё — столбец времени у
+ * них будет пуст, но открываются они по-прежнему.
+ * @param {{path: string, name: string, openedAt?: number}[]} list
  * @param {{path: string, name: string}} item
  * @param {number} [limit]
+ * @param {number} [now]
  */
-function remember(list, item, limit = LIMIT) {
+function remember(list, item, limit = LIMIT, now = Date.now()) {
   if (!item?.path) return list;
   const rest = list.filter((x) => x.path !== item.path);
-  return [{ path: item.path, name: item.name }, ...rest].slice(0, limit);
+  return [{ path: item.path, name: item.name, openedAt: now }, ...rest].slice(0, limit);
 }
 
 /** Убирает то, чего больше нет на диске. */

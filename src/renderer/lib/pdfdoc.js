@@ -113,9 +113,11 @@ export const dpr = () => Math.min(window.devicePixelRatio || 1, 2);
 /**
  * Рисует страницу в канву заданной ширины в CSS-пикселях.
  * Прерывается по signal: пролистнули дальше — доводить нечего.
+ * @param {number} [rotation] поворот в градусах, кратный 90; складывается с
+ *   собственным поворотом страницы, который задан в самом документе
  * @returns {Promise<{canvas: HTMLCanvasElement, viewport: object}|null>} null, если отменили
  */
-export async function renderPage(doc, n, cssWidth, signal) {
+export async function renderPage(doc, n, cssWidth, signal, rotation = 0) {
   if (signal?.aborted) return null;
   const page = await acquirePage(doc, n);
   if (signal?.aborted) {
@@ -123,9 +125,13 @@ export async function renderPage(doc, n, cssWidth, signal) {
     return null;
   }
 
-  const base = page.getViewport({ scale: 1 });
+  // Ширину считаем от повёрнутой страницы: у лежащей на боку она другая.
+  const base = page.getViewport({ scale: 1, rotation: page.rotate + rotation });
   const ratio = dpr();
-  const viewport = page.getViewport({ scale: (cssWidth / base.width) * ratio });
+  const viewport = page.getViewport({
+    scale: (cssWidth / base.width) * ratio,
+    rotation: page.rotate + rotation,
+  });
 
   const canvas = document.createElement('canvas');
   canvas.width = Math.max(1, Math.floor(viewport.width));
@@ -149,14 +155,20 @@ export async function renderPage(doc, n, cssWidth, signal) {
     signal?.removeEventListener('abort', stop);
     releasePage(doc, n);
   }
-  return { canvas, viewport: page.getViewport({ scale: cssWidth / base.width }) };
+  return {
+    canvas,
+    viewport: page.getViewport({
+      scale: cssWidth / base.width,
+      rotation: page.rotate + rotation,
+    }),
+  };
 }
 
 /** Размеры страницы при масштабе 1 — по ним строится лента. */
-export async function pageSize(doc, n) {
+export async function pageSize(doc, n, rotation = 0) {
   const page = await acquirePage(doc, n);
   try {
-    const v = page.getViewport({ scale: 1 });
+    const v = page.getViewport({ scale: 1, rotation: page.rotate + rotation });
     return { width: v.width, height: v.height };
   } finally {
     releasePage(doc, n);

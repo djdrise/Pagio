@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Значок программы Pagio: плотная плашка с двумя прорезанными строками.
+     Знак — одна фигура с правилом evenodd, поэтому строки не закрашены цветом
+     подложки, а прорезаны насквозь: сквозь них видно саму плитку, и тот же
+     файл годится для любого фона.
+     Габарит 46×46 с центром в (32, 32) — 72% плитки.
+     Из этого файла scripts/make-icons.js собирает всё остальное. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"
+     role="img" aria-label="Pagio">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#2f74d8" />
+      <stop offset="1" stop-color="#17509f" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#tile)" />
+  <path fill-rule="evenodd" fill="#ffffff"
+        d="M20 9h24a11 11 0 0 1 11 11v24a11 11 0 0 1-11 11H20A11 11 0 0 1 9 44V20A11 11 0 0 1 20 9z
+           M18 21h28v6H18z M18 37h19v6H18z" />
+</svg>

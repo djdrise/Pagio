@@ -17,6 +17,8 @@ const MM_PER_INCH = 25.4;
 
 const params = new URLSearchParams(location.search);
 const id = params.get('id');
+/** Поворот с экрана: скан, развёрнутый в окне, должен так же лечь на бумагу. */
+const rotation = Number(params.get('rotation')) || 0;
 const pages = (params.get('pages') || '')
   .split(',')
   .map((n) => Number(n))
@@ -38,7 +40,7 @@ async function run() {
 
   const doc = await loadDoc({ id, length: source.length });
   const first = await doc.getPage(pages[0]);
-  const size = first.getViewport({ scale: 1 });
+  const size = first.getViewport({ scale: 1, rotation: first.rotate + rotation });
   first.cleanup();
 
   // Размер листа берём по первой печатаемой странице. Документы со смешанными
@@ -52,7 +54,7 @@ async function run() {
 
   for (const n of pages) {
     try {
-      const out = await renderPage(doc, n, cssWidth);
+      const out = await renderPage(doc, n, cssWidth, undefined, rotation);
       if (!out) continue;
       const img = new Image();
       img.src = out.canvas.toDataURL('image/jpeg', 0.92);
