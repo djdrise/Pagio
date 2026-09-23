@@ -30,6 +30,7 @@
   "build": {
     "appId": "dev.pautov.pagio",
     "productName": "Pagio",
+    "afterPack": "scripts/adhoc-sign.js",
     "files": [
       "assets/**/*",
       "!assets/logo.html",
