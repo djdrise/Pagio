@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pagio — варианты логотипа</title>
+    <style>
+      /* Страница для выбора знака: три варианта в одной сетке, каждый — в тех
+         размерах и на тех фонах, где логотипу придётся жить на самом деле. */
+      :root {
+        --bg: #f3f4f6;
+        --panel: #ffffff;
+        --line: #d9dce1;
+        --text: #1f2430;
+        --dim: #6b7280;
+        --accent: #1e5fbf;
+        --accent-soft: #e8f0fd;
+        /* Цвета самого знака: два тона, больше не нужно. */
+        --logo-ink: #1f2430;
+        --logo-acc: #1e5fbf;
+        /* Заливка стекла лупы: знак прозрачный, поэтому цвет даёт подложка. */
+        --logo-hole: #f3f4f6;
+        color-scheme: light dark;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) {
+          --bg: #15181e;
+          --panel: #1c2027;
+          --line: #2c3239;
+          --text: #e6e9ee;
+          --dim: #9aa1ab;
+          --accent: #6aa3f5;
+          --accent-soft: #1b2839;
+          --logo-ink: #e6e9ee;
+          --logo-acc: #6aa3f5;
+          --logo-hole: #15181e;
+        }
+      }
+      :root[data-theme='dark'] {
+        --bg: #15181e;
+        --panel: #1c2027;
+        --line: #2c3239;
+        --text: #e6e9ee;
+        --dim: #9aa1ab;
+        --accent: #6aa3f5;
+        --accent-soft: #1b2839;
+        --logo-ink: #e6e9ee;
+        --logo-acc: #6aa3f5;
+        --logo-hole: #15181e;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        padding: 40px 16px 64px;
+        background: var(--bg);
+        color: var(--text);
+        font: 15px/1.55 -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      }
+
+      .wrap { max-width: 1080px; margin: 0 auto; }
+
+      header { margin-bottom: 32px; }
+      h1 { margin: 0 0 6px; font-size: 24px; font-weight: 650; letter-spacing: -0.01em; }
+      .lead { margin: 0; max-width: 62ch; color: var(--dim); }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+      }
+
+      .card {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--panel);
+      }
+
+      .card h2 { margin: 0; font-size: 17px; font-weight: 620; }
+      .card h2 span { color: var(--dim); font-weight: 400; }
+      .why { margin: -8px 0 0; min-height: 4.4em; color: var(--dim); font-size: 13.5px; }
+
+      /* Крупный показ: знак как есть, на светлом листе. */
+      .stage {
+        display: grid;
+        place-items: center;
+        padding: 26px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--bg);
+      }
+
+      /* Вариант, выбранный для программы, показываем сразу на плитке: знак у
+         него белый, и на светлом листе его попросту не было бы видно.
+         Правило идёт после .stage — иначе фон перебило бы оно. */
+      .stage-tile {
+        border-color: transparent;
+        background: linear-gradient(160deg, #2f74d8, #17509f);
+        --logo-ink: #ffffff;
+        --logo-acc: rgba(255, 255, 255, 0.72);
+      }
+
+      /* Ряд рабочих размеров: панель инструментов, список, значок в углу. */
+      .sizes {
+        display: flex;
+        align-items: flex-end;
+        gap: 18px;
+        padding: 14px 16px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+      .size { display: grid; justify-items: center; gap: 6px; }
+      .size small { color: var(--dim); font-size: 11px; font-variant-numeric: tabular-nums; }
+
+      /* Плитка приложения: белый знак на фирменном синем — то, что увидит
+         рабочий стол и панель задач. */
+      .tiles { display: flex; align-items: center; gap: 14px; }
+      .tile {
+        display: grid;
+        place-items: center;
+        width: 76px;
+        height: 76px;
+        border-radius: 17px;
+        background: linear-gradient(160deg, #2f74d8, #17509f);
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25);
+        --logo-ink: #ffffff;
+        --logo-acc: rgba(255, 255, 255, 0.62);
+        --logo-hole: #2a6ad0;
+      }
+      .tile.small { width: 44px; height: 44px; border-radius: 10px; }
+      .tile.tiny { width: 28px; height: 28px; border-radius: 7px; }
+
+      .actions { display: flex; gap: 8px; margin-top: auto; padding-top: 4px; }
+      button {
+        padding: 7px 12px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: var(--panel);
+        color: var(--text);
+        font: inherit;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      button:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+      button.primary { border-color: var(--accent); background: var(--accent); color: #fff; }
+      button.primary:hover { filter: brightness(1.07); color: #fff; }
+
+      pre {
+        margin: 0;
+        padding: 12px;
+        max-height: 260px;
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--bg);
+        color: var(--dim);
+        font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre;
+      }
+      pre[hidden] { display: none; }
+
+      footer { margin-top: 36px; color: var(--dim); font-size: 13px; }
+      kbd {
+        padding: 1px 5px;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        background: var(--panel);
+        font: inherit;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>Pagio — три варианта логотипа</h1>
+        <p class="lead">
+          Три разных подхода: абстрактная оптика, типографский знак и плотная
+          плашка. Каждый показан белым на фирменной плитке — так его увидят
+          рабочий стол и панель задач, — а затем в рабочих размерах, вплоть до
+          16 пикселей в панели инструментов.
+        </p>
+      </header>
+
+      <div class="grid">
+        <!-- ------------------------------------------------------------- -->
+        <section class="card" data-name="aperture">
+          <h2>1. Диафрагма <span>— окно, через которое смотрят</span></h2>
+          <p class="why">
+            Четыре лепестка вокруг ромбовидного окна. Ничего не изображает: ни
+            бумаги, ни буквы — только сам взгляд. Силуэт плотный, поэтому в
+            мелком размере не рассыпается.
+          </p>
+
+          <div class="stage stage-tile">
+            <svg class="logo" viewBox="0 0 64 64" width="120" height="120" role="img"
+                 aria-label="Логотип Pagio: диафрагма">
+              <!-- Четыре штриха: каждый упирается в свой угол и не доходит до
+                   следующего. Разрывы на углах дают вращение, в середине
+                   остаётся окно. Симметричные штрихи читались просто рамкой. -->
+              <g fill="none" stroke="var(--logo-ink)" stroke-width="8" stroke-linecap="round">
+                <path d="M14 14v26" />
+                <path d="M50 14H24" />
+                <path d="M50 50V24" />
+                <path d="M14 50h26" />
+              </g>
+            </svg>
+          </div>
+
+          <div class="sizes"></div>
+          <div class="tiles"></div>
+
+          <div class="actions">
+            <button class="primary" data-act="download">Скачать SVG</button>
+            <button data-act="code">Показать код</button>
+          </div>
+          <pre hidden></pre>
+        </section>
+
+        <!-- ------------------------------------------------------------- -->
+        <section class="card" data-name="pilcrow">
+          <h2>2. Пилькроу <span>— знак абзаца</span></h2>
+          <p class="why">
+            ¶ — типографский знак текста как такового, а не бумаги, на которой он
+            напечатан. У просмотрщиков такого нет ни у кого, а смысл прямее
+            некуда: программа про текст.
+          </p>
+
+          <div class="stage stage-tile">
+            <svg class="logo" viewBox="0 0 64 64" width="120" height="120" role="img"
+                 aria-label="Логотип Pagio: знак абзаца">
+              <g fill="var(--logo-ink)">
+                <path d="M47.5 8v48h-7V8z" />
+                <path d="M36.5 8v48h-7V34a13 13 0 0 1 0-26z" />
+                <path d="M29.5 8a13 13 0 0 0 0 26z" />
+              </g>
+            </svg>
+          </div>
+
+          <div class="sizes"></div>
+          <div class="tiles"></div>
+
+          <div class="actions">
+            <button class="primary" data-act="download">Скачать SVG</button>
+            <button data-act="code">Показать код</button>
+          </div>
+          <pre hidden></pre>
+        </section>
+
+        <!-- ------------------------------------------------------------- -->
+        <section class="card" data-name="block">
+          <h2>3. Текстовый блок <span>— выбран для программы</span></h2>
+          <p class="why">
+            Не контур листа, а сплошная плашка, в которой прорезаны две строки.
+            Прорези — настоящие дыры, поэтому знак работает на любом фоне. Их
+            толщина и перемычка между ними подобраны под 16 пикселей: там
+            остаётся плотное пятно с двумя различимыми строками.
+          </p>
+
+          <div class="stage stage-tile">
+            <svg class="logo" viewBox="0 0 64 64" width="120" height="120" role="img"
+                 aria-label="Логотип Pagio: рулон">
+              <!-- Одна фигура с правилом evenodd: строки — сквозные дыры, а не
+                   полосы цвета фона, поэтому знак не зависит от подложки. -->
+              <path fill-rule="evenodd" fill="var(--logo-ink)"
+                    d="M20 9h24a11 11 0 0 1 11 11v24a11 11 0 0 1-11 11H20A11 11 0 0 1 9 44V20A11 11 0 0 1 20 9z
+                       M18 21h28v6H18z M18 37h19v6H18z" />
+            </svg>
+          </div>
+
+          <div class="sizes"></div>
+          <div class="tiles"></div>
+
+          <div class="actions">
+            <button class="primary" data-act="download">Скачать SVG</button>
+            <button data-act="code">Показать код</button>
+          </div>
+          <pre hidden></pre>
+        </section>
+      </div>
+
+      <footer>
+        Знаки нарисованы в сетке 64×64 и раскрашены двумя переменными:
+        <kbd>--logo-ink</kbd> и <kbd>--logo-acc</kbd>. В тёмной теме страницы они
+        меняются сами, а на синей плитке становятся белыми — тот же файл годится
+        и для панели инструментов, и для значка программы.
+      </footer>
+    </div>
+
+    <script>
+      // Размеры и плитки собираем из того же знака, что показан крупно: так на
+      // странице заведомо не разъедутся варианты одного и того же логотипа.
+      const SIZES = [48, 32, 24, 16];
+      const INK = { light: '#1f2430', acc: '#1e5fbf' };
+
+      for (const card of document.querySelectorAll('.card')) {
+        const logo = card.querySelector('.logo');
+
+        const sizes = card.querySelector('.sizes');
+        for (const px of SIZES) {
+          const box = document.createElement('div');
+          box.className = 'size';
+          const copy = logo.cloneNode(true);
+          copy.setAttribute('width', px);
+          copy.setAttribute('height', px);
+          copy.removeAttribute('role');
+          copy.setAttribute('aria-hidden', 'true');
+          const label = document.createElement('small');
+          label.textContent = `${px}px`;
+          box.append(copy, label);
+          sizes.appendChild(box);
+        }
+
+        const tiles = card.querySelector('.tiles');
+        for (const [cls, px] of [['', 46], ['small', 27], ['tiny', 17]]) {
+          const tile = document.createElement('div');
+          tile.className = `tile ${cls}`.trim();
+          const copy = logo.cloneNode(true);
+          copy.setAttribute('width', px);
+          copy.setAttribute('height', px);
+          copy.removeAttribute('role');
+          copy.setAttribute('aria-hidden', 'true');
+          tile.appendChild(copy);
+          tiles.appendChild(tile);
+        }
+
+        const code = card.querySelector('pre');
+        card.querySelector('[data-act="code"]').addEventListener('click', (e) => {
+          if (!code.textContent) code.textContent = standalone(logo);
+          code.hidden = !code.hidden;
+          e.target.textContent = code.hidden ? 'Показать код' : 'Скрыть код';
+        });
+
+        card.querySelector('[data-act="download"]').addEventListener('click', () => {
+          const blob = new Blob([standalone(logo)], { type: 'image/svg+xml' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `pagio-${card.dataset.name}.svg`;
+          a.click();
+          URL.revokeObjectURL(a.href);
+        });
+      }
+
+      /** Отдельный файл: переменные темы заменяем настоящими цветами. */
+      function standalone(logo) {
+        const copy = logo.cloneNode(true);
+        copy.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        copy.setAttribute('width', '64');
+        copy.setAttribute('height', '64');
+        copy.removeAttribute('class');
+        const text = new XMLSerializer()
+          .serializeToString(copy)
+          .replaceAll('var(--logo-ink)', INK.light)
+          .replaceAll('var(--logo-acc)', INK.acc)
+          .replaceAll('var(--logo-hole)', '#ffffff');
+        // Отступы страницы в отдельном файле ни к чему: раскладываем по строкам заново.
+        return text
+          .replace(/>\s*</g, '>\n<')
+          .split('\n')
+          .map((line) => line.trim())
+          .map((line) => (line.startsWith('<svg') || line === '</svg>' ? line : `  ${line}`))
+          .join('\n');
+      }
+    </script>
+  </body>
+</html>

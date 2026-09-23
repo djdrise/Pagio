@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.log
+sample.pdf
+
+# Служебные файлы macOS
+.DS_Store

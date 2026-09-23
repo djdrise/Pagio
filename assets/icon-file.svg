@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Значок документа, связанного с Pagio: бумажный лист со знаком программы.
+     Лист оставлен нарочно — в проводнике файл должен выглядеть файлом, а не
+     второй копией плитки программы. Плашка вписана тем же центром (32, 32), а
+     её строки прорезаны насквозь, поэтому сквозь них видно бумагу. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"
+     role="img" aria-label="Документ Pagio">
+  <g transform="translate(1 0)">
+    <g stroke="#1e5fbf" stroke-width="2.6" stroke-linejoin="round">
+      <path d="M17 5h20l13 13v36a5 5 0 0 1-5 5H17a5 5 0 0 1-5-5V10a5 5 0 0 1 5-5z" fill="#ffffff" />
+      <path d="M37 5l13 13H41a4 4 0 0 1-4-4z" fill="#cfe0f8" />
+    </g>
+    <path fill-rule="evenodd" fill="#1e5fbf"
+          transform="translate(32 32) scale(0.6) translate(-32 -32)"
+          d="M20 9h24a11 11 0 0 1 11 11v24a11 11 0 0 1-11 11H20A11 11 0 0 1 9 44V20A11 11 0 0 1 20 9z
+             M18 21h28v6H18z M18 37h19v6H18z" />
+  </g>
+</svg>

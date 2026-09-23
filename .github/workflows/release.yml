@@ -1,0 +1,96 @@
+name: release
+
+# Релиз собирается по тегу: git tag v0.1.0 && git push origin v0.1.0
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Сборка (${{ matrix.artifact }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            artifact: mac
+            args: --mac --x64 --arm64
+          - os: windows-latest
+            artifact: win
+            args: --win --x64
+          - os: ubuntu-latest
+            artifact: linux
+            args: --linux --x64
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Собрать установщики
+        run: npx electron-builder ${{ matrix.args }} --publish never
+        env:
+          # Сертификата разработчика у проекта нет — сборка не подписывается.
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}
+          if-no-files-found: error
+          path: |
+            dist/*.dmg
+            dist/*.zip
+            dist/*.exe
+            dist/*.AppImage
+            dist/*.deb
+
+  release:
+    name: Публикация релиза
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+      - name: Создать релиз и приложить файлы
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          find dist -type f | sort
+          # Заметки — отдельным файлом через heredoc: YAML срезает отступ блока,
+          # и текст доходит без ведущих пробелов. Вписанный в аргумент --notes
+          # он бы сохранил отступы, а Markdown отрендерил бы список как код.
+          cat > notes.md <<'MD'
+          Просмотрщик PDF: непрерывная лента страниц, вкладки, поиск по тексту,
+          печать и показ на весь экран. Интерфейс на русском и английском.
+
+          Установщики собраны на GitHub Actions под каждую ОС.
+
+          * **macOS** — `.dmg`: `arm64` для Apple Silicon, `x64` для Intel
+          * **Windows** — `Setup.exe` (установщик) и портативный `.exe`
+          * **Linux** — `.AppImage` и `.deb`
+
+          Сборки подписаны ad-hoc, но не заверены у Apple и не имеют сертификата
+          для Windows, поэтому при первом запуске система спросит разрешение.
+
+          * **macOS** — «Системные настройки» → «Конфиденциальность и безопасность»
+            → «Всё равно открыть». На macOS 14 и старше работает правый клик по
+            программе → «Открыть». Если система пишет, что приложение повреждено:
+            `xattr -dr com.apple.quarantine /Applications/Pagio.app`
+          * **Windows** — SmartScreen: «Подробнее» → «Выполнить в любом случае».
+          * **Linux** — `chmod +x Pagio-*.AppImage`.
+          MD
+          # Список файлов только массивом: неэкранированный $(find) разбивает
+          # имена с пробелами на отдельные аргументы.
+          mapfile -t files < <(find dist -type f \( -name '*.dmg' -o -name '*.zip' -o -name '*.exe' -o -name '*.AppImage' -o -name '*.deb' \) | sort)
+          printf 'к релизу: %s\n' "${files[@]}"
+          gh release create "${{ github.ref_name }}" \
+            --title "Pagio ${{ github.ref_name }}" \
+            --notes-file notes.md \
+            "${files[@]}"
