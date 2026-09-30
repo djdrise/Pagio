@@ -1,6 +1,6 @@
 {
   "name": "pagio",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Pagio: просмотрщик PDF для работы с документами — непрерывная лента, поиск, печать, показ",
   "main": "src/main/main.js",
   "author": {
