@@ -77,6 +77,28 @@ const OVERSCAN = 0.6;
  */
 const KEEP_RENDERED = 2;
 
+/**
+ * Остановки масштаба для кнопок «+» и «−» и для меню.
+ *
+ * Прежде шаг был множителем 1.25 от текущей величины, а текущая приходила от
+ * «по ширине» и почти никогда не была круглой: от 85% одно нажатие давало 68%.
+ * В списке масштабов такой строки нет, и рядом с готовыми 50, 75, 100 она
+ * выглядела случайной. Остановки делают шаг предсказуемым: кнопки и список
+ * всегда показывают одни и те же величины.
+ *
+ * Зум колесом с Ctrl остался плавным: там под курсором держат точку документа,
+ * и прыжки по остановкам сломали бы это ощущение.
+ */
+const ZOOM_STOPS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8];
+
+/** Соседняя остановка в заданную сторону; с краёв списка не уводит. */
+function zoomStop(scale, dir) {
+  const eps = 0.001;
+  if (dir > 0) return ZOOM_STOPS.find((s) => s > scale + eps) ?? ZOOM_STOPS[ZOOM_STOPS.length - 1];
+  for (let i = ZOOM_STOPS.length - 1; i >= 0; i--) if (ZOOM_STOPS[i] < scale - eps) return ZOOM_STOPS[i];
+  return ZOOM_STOPS[0];
+}
+
 const pageQueue = new RenderQueue(4);
 const thumbQueue = new RenderQueue(2);
 const thumbs = new ThumbStore();
@@ -1332,8 +1354,8 @@ function bindUi() {
   $('btn-sidebar').addEventListener('click', () => toggleSidebar());
   $('btn-prev').addEventListener('click', () => goToPage(state ? state.page - 1 : 1));
   $('btn-next').addEventListener('click', () => goToPage(state ? state.page + 1 : 1));
-  $('btn-zoom-in').addEventListener('click', () => state && setScale(state.scale * 1.25));
-  $('btn-zoom-out').addEventListener('click', () => state && setScale(state.scale / 1.25));
+  $('btn-zoom-in').addEventListener('click', () => state && setScale(zoomStop(state.scale, 1)));
+  $('btn-zoom-out').addEventListener('click', () => state && setScale(zoomStop(state.scale, -1)));
   $('btn-rotate').addEventListener('click', () => rotate(90));
   $('btn-find').addEventListener('click', openFind);
   $('btn-print').addEventListener('click', openPrintDialog);
@@ -1658,8 +1680,8 @@ const menuCommands = {
   print: openPrintDialog,
   find: openFind,
   'find:next': () => stepHit(1),
-  'zoom:in': () => state && setScale(state.scale * 1.25),
-  'zoom:out': () => state && setScale(state.scale / 1.25),
+  'zoom:in': () => state && setScale(zoomStop(state.scale, 1)),
+  'zoom:out': () => state && setScale(zoomStop(state.scale, -1)),
   'zoom:reset': () => setScale(1),
   'fit:width': () => setMode('fit-width'),
   'fit:page': () => setMode('fit-page'),
