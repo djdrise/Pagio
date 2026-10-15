@@ -467,7 +467,10 @@ body.present .page { border-color: transparent; box-shadow: none; }
    cursor: text у слоя выделения, иначе над текстом курсор появлялся бы снова.
    Заодно запрещаем выделение — целиться в текст всё равно нечем, а случайное
    протаскивание мыши съедало бы щелчок «дальше». */
-body.present, body.present * { cursor: none; }
+body.present, body.present *:not(.modal, .modal *) { cursor: none; }
+/* Окна поверх показа — исключение: в диалоге сохранения без курсора не попасть
+   ни в одну кнопку. Курсор у body скрыт, а он наследуется, — возвращаем явно. */
+body.present .modal { cursor: default; }
 body.present .text-layer { user-select: none; }
 
 /* ---------- Пустой экран ---------- */
@@ -576,6 +579,33 @@ button.plain {
 .modal-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 .modal-card.wide { width: min(480px, 92vw); }
 .modal-card.prefs { width: min(340px, 92vw); }
+
+/* ---------- Сохранение страницы картинкой ---------- */
+.modal-card.export { width: min(360px, 92vw); }
+.export-page { margin: -8px 0 12px; color: var(--dim); }
+.field {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+.field[hidden] { display: none; }
+.select {
+  height: 28px;
+  padding: 0 4px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+}
+.range { display: flex; align-items: center; gap: 8px; }
+.range input { flex: 1 1 auto; min-width: 0; accent-color: var(--accent); }
+.range output { width: 38px; text-align: right; font-variant-numeric: tabular-nums; }
+/* Размер в пикселях — главное, что меняет выбор разрешения: его видно сразу,
+   до сохранения. */
+.export-size { margin: 12px 0 0; color: var(--dim); font-variant-numeric: tabular-nums; }
 
 /* Группы идут столбцом: без пояснений в них осталось по паре строк, и весь
    список умещается без прокрутки. Рядом их ставить теперь не за чем — три

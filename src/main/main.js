@@ -415,6 +415,68 @@ async function sweepThumbs() {
 // нужные страницы в полном размере и уходит в системный диалог печати. Иначе на
 // бумагу попали бы полосы прокрутки и боковая панель.
 
+// ---------------------------------------------------------------------------
+// Контекстное меню страницы
+// ---------------------------------------------------------------------------
+// Меню системное, а не нарисованное в окне: выглядит как везде в этой ОС и не
+// упирается в края окна. Окно сообщает только, по какой странице щёлкнули и
+// есть ли выделенный текст.
+ipcMain.on('ctx:page', (_e, { page, canCopy } = {}) => {
+  if (!win || !Number.isInteger(page) || page < 1) return;
+  const m = menuText(settings.prefs.lang);
+  const items = [];
+  if (canCopy) items.push({ role: 'copy', label: m.copy }, { type: 'separator' });
+  items.push({ label: m.exportImage, click: send('export:open', { page }) });
+  Menu.buildFromTemplate(items).popup({ window: win });
+});
+
+// ---------------------------------------------------------------------------
+// Страница как картинка
+// ---------------------------------------------------------------------------
+// Рисует окно — PDF разобран там, — а куда писать, решает только главный
+// процесс: окно получает жетон, а не путь, и записать что-то мимо выбранного
+// человеком файла не может.
+
+/** Жетон → путь, выбранный в диалоге сохранения. Жетон одноразовый. */
+const exportTargets = new Map();
+let exportSeq = 0;
+/** Куда сохраняли в прошлый раз — туда же предложим и следующую страницу. */
+let lastExportDir = null;
+
+ipcMain.handle('export:pick', async (_e, { id, page, format } = {}) => {
+  const doc = docs.get(id);
+  if (!doc || !win) return null;
+  const jpeg = format === 'jpeg';
+  const m = menuText(settings.prefs.lang);
+  const base = doc.name.replace(/\.pdf$/i, '');
+  const dir = lastExportDir || path.dirname(doc.path);
+  const res = await dialog.showSaveDialog(win, {
+    title: m.exportTitle,
+    defaultPath: path.join(dir, `${m.exportName(base, page)}.${jpeg ? 'jpg' : 'png'}`),
+    filters: [jpeg ? { name: 'JPEG', extensions: ['jpg', 'jpeg'] } : { name: 'PNG', extensions: ['png'] }],
+  });
+  if (res.canceled || !res.filePath) return null;
+  lastExportDir = path.dirname(res.filePath);
+  const token = String(++exportSeq);
+  exportTargets.set(token, res.filePath);
+  return { token, name: path.basename(res.filePath) };
+});
+
+/** Байты картинки по жетону; null вместо байтов — передумали, жетон сгорает. */
+ipcMain.handle('export:write', async (_e, { token, bytes } = {}) => {
+  const file = exportTargets.get(token);
+  exportTargets.delete(token);
+  if (!file) return { ok: false, error: 'файл не выбран' };
+  if (bytes == null) return { ok: true, skipped: true };
+  if (!(bytes instanceof Uint8Array) || !bytes.length) return { ok: false, error: 'пустая картинка' };
+  try {
+    await fs.writeFile(file, bytes);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
 /** @type {BrowserWindow|null} */ let printWin = null;
 
 ipcMain.handle('doc:print', async (_e, { id, pages, rotation = 0 }) => {
@@ -466,6 +528,7 @@ function buildMenu() {
         { label: m.closeTab, accelerator: 'CmdOrCtrl+W', click: send('tab:close') },
         { type: 'separator' },
         { label: m.print, accelerator: 'CmdOrCtrl+P', click: send('print') },
+        { label: m.exportImage, accelerator: 'CmdOrCtrl+Shift+S', click: send('export:open') },
         { type: 'separator' },
         { role: 'quit', label: m.quit },
       ],

@@ -54,6 +54,13 @@ Windows certificate, so the first launch needs a nudge:
 * **Printing** the whole document or a range of pages through the system
   dialog. What goes on paper is the document itself, not the application
   window.
+* **Saving a page as an image** — right-click a page or its thumbnail and pick
+  “Save page as image…”, or File → Save page as image
+  (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>). PNG or JPEG with a quality
+  slider, from 72 to 600 dpi; the size in pixels is shown before you save. The
+  resolution is written into the file itself, so Word or an image editor
+  places the picture at the real size of the page. The page is saved the way it
+  is turned on screen.
 * **Full screen** on <kbd>F11</kbd>.
 * **Show** on <kbd>F5</kbd> or <kbd>Ctrl</kbd>+<kbd>L</kbd>: no frame, no
   panels, one page per screen, paged with the keyboard, a click or the wheel.
@@ -88,6 +95,7 @@ Windows certificate, so the first launch needs a nudge:
 | <kbd>Ctrl</kbd>+<kbd>=</kbd> <kbd>Ctrl</kbd>+<kbd>-</kbd> <kbd>Ctrl</kbd>+<kbd>0</kbd> | zoom |
 | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> | rotate right / left |
 | <kbd>Ctrl</kbd>+<kbd>O</kbd>, <kbd>Ctrl</kbd>+<kbd>P</kbd> | open, print |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> | save the page as an image |
 | <kbd>Ctrl</kbd>+<kbd>W</kbd> | close the tab (the middle mouse button does the same) |
 | <kbd>Ctrl</kbd>+<kbd>Tab</kbd> | next tab, with <kbd>Shift</kbd> the previous one |
 | <kbd>F4</kbd> | sidebar |
@@ -125,7 +133,7 @@ npm run sample            # sample.pdf, 60 pages of varying height
 
 ```bash
 npm run check   # syntax of every source file
-npm test        # tests for the pure logic: ribbon layout and search
+npm test        # tests for the pure logic: ribbon layout, search, image resolution
 ```
 
 GitHub Actions runs both on every push to `main` and on every pull request.
@@ -199,6 +207,7 @@ src/renderer/viewer.js        tabs, page ribbon, zoom, sidebar, search, show
 src/renderer/print.js         rendering pages for printing
 src/renderer/lib/pdfdoc.js    a wrapper over pdf.js, cache of parsed pages
 src/renderer/lib/scrolllayout.mjs  the arithmetic of the continuous ribbon
+src/renderer/lib/imagemeta.mjs     page as an image: size in pixels, dpi inside the file
 src/renderer/lib/search.mjs   text parsing and matching
 src/renderer/lib/strings.mjs  window strings, two languages
 src/renderer/lib/when.mjs     how long ago a file was opened: time, date or year

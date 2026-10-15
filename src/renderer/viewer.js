@@ -13,7 +13,7 @@
 // инструментов и боковая панель — они показывают активный сеанс, на который
 // указывает state.
 
-import { loadDoc, renderPage, pageSize, textContent, TextLayer } from './lib/pdfdoc.js';
+import { loadDoc, renderPage, renderPageImage, pageSize, textContent, TextLayer } from './lib/pdfdoc.js';
 import {
   layoutPages,
   visibleRange,
@@ -29,6 +29,7 @@ import { ThumbStore } from './lib/thumbstore.js';
 import { buildPageText, findMatches, spansForMatch } from './lib/search.mjs';
 import { pick as pickDict } from './lib/strings.mjs';
 import { formatWhen, formatFull } from './lib/when.mjs';
+import { EXPORT_DPI, DEFAULT_DPI, exportPixels, withDpi } from './lib/imagemeta.mjs';
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -52,12 +53,22 @@ const els = {
   printFrom: $('print-from'),
   printTo: $('print-to'),
   printError: $('print-error'),
+  exportDialog: $('export-dialog'),
+  exportPage: $('export-page'),
+  exportDpi: $('export-dpi'),
+  exportQualityRow: $('export-quality-row'),
+  exportQuality: $('export-quality'),
+  exportQualityValue: $('export-quality-value'),
+  exportSize: $('export-size'),
+  exportError: $('export-error'),
+  exportGo: $('export-go'),
+  exportCancel: $('export-cancel'),
   prefsDialog: $('prefs-dialog'),
   helpDialog: $('help-dialog'),
 };
 
 /** Все окна, которые закрываются по Esc и не должны быть открыты вдвоём. */
-const DIALOGS = [els.printDialog, els.prefsDialog, els.helpDialog];
+const DIALOGS = [els.printDialog, els.exportDialog, els.prefsDialog, els.helpDialog];
 
 /** Кнопки и поля, которым нужен открытый документ. */
 const DOC_TOOLS = [
@@ -175,6 +186,13 @@ const UI = [
   ['#prefs-lang-ru', 'text', 'prefs.langRu'], ['#prefs-lang-en', 'text', 'prefs.langEn'],
   ['#prefs-close', 'text', 'prefs.done'], ['#help-close', 'text', 'prefs.done'],
   ['#help-about', 'text', 'help.about'],
+  ['#export-title', 'text', 'export.title'],
+  ['#export-format-legend', 'text', 'export.format'],
+  ['#export-png', 'text', 'export.png'], ['#export-jpeg', 'text', 'export.jpeg'],
+  ['#export-dpi-label', 'text', 'export.dpi'],
+  ['#export-quality-label', 'text', 'export.quality'],
+  ['#export-cancel', 'text', 'export.cancel'],
+  ['#export-dialog .modal-card', 'aria', 'export.title'],
   ['#print-dialog .modal-card', 'aria', 'print.title'],
   ['#prefs-dialog .modal-card', 'aria', 'prefs.title'],
   ['#help-dialog .modal-card', 'aria', 'tool.help'],
@@ -219,6 +237,8 @@ function applyLang() {
   }
   if (state) showFindStatus(state);
   showRecent();
+  fillExportDpi();
+  if (!els.exportDialog.hidden) showExportState();
 }
 
 /** Список сочетаний в справке: два набора строк, поэтому строится из словаря. */
@@ -1320,6 +1340,155 @@ async function doPrint() {
 }
 
 // ---------------------------------------------------------------------------
+// Страница как картинка
+// ---------------------------------------------------------------------------
+// Правый щелчок по странице или «Файл → Сохранить страницу как изображение».
+// Сперва формат и разрешение — от них зависит размер, и его видно до
+// сохранения, — потом системный диалог выбора файла, и только затем рисуем:
+// отрисовка в 600 dpi заметна по времени, тратить её на передуманное незачем.
+
+/** Последний выбор: следующая страница сохраняется так же, без перенастройки. */
+const exportChoice = { format: 'png', dpi: DEFAULT_DPI, quality: 90 };
+/** Открытое сохранение: чья страница, её размер в пунктах и идёт ли запись. */
+let exportJob = null;
+
+function fillExportDpi() {
+  const current = Number(els.exportDpi.value) || exportChoice.dpi;
+  els.exportDpi.replaceChildren(
+    ...EXPORT_DPI.map((dpi) => {
+      const opt = document.createElement('option');
+      opt.value = String(dpi);
+      opt.textContent = t['export.dpiOpt'](dpi);
+      return opt;
+    }),
+  );
+  els.exportDpi.value = String(current);
+}
+
+function openExportDialog(page) {
+  if (!state?.doc || exportJob?.busy) return;
+  const session = state;
+  const n = Number.isInteger(page) && page >= 1 && page <= session.pageCount ? page : session.page;
+  exportJob = { session, page: n, size: null, busy: false };
+
+  const radio = document.querySelector(`input[name="export-format"][value="${exportChoice.format}"]`);
+  if (radio) radio.checked = true;
+  els.exportDpi.value = String(exportChoice.dpi);
+  els.exportQuality.value = String(exportChoice.quality);
+  els.exportError.hidden = true;
+  showExportState();
+  openDialog(els.exportDialog);
+
+  // Размер страницы — с её собственным поворотом и поворотом на экране:
+  // сохраняется то, что видно.
+  const job = exportJob;
+  pageSize(session.doc, n, session.rotation)
+    .then((size) => {
+      if (exportJob !== job) return;
+      job.size = size;
+      showExportState();
+    })
+    .catch(() => {});
+}
+
+function readExportChoice() {
+  const format = document.querySelector('input[name="export-format"]:checked')?.value === 'jpeg' ? 'jpeg' : 'png';
+  const dpi = EXPORT_DPI.includes(Number(els.exportDpi.value)) ? Number(els.exportDpi.value) : DEFAULT_DPI;
+  const quality = Math.min(100, Math.max(50, Number(els.exportQuality.value) || 90));
+  return { format, dpi, quality };
+}
+
+/** Подписи и доступность кнопок по текущему выбору; размер — как только известен. */
+function showExportState() {
+  const job = exportJob;
+  if (!job) return;
+  const choice = readExportChoice();
+  els.exportPage.textContent = t['export.page'](job.page);
+  els.exportQualityRow.hidden = choice.format !== 'jpeg';
+  els.exportQualityValue.value = `${choice.quality}%`;
+  els.exportQualityValue.textContent = `${choice.quality}%`;
+
+  let fits = true;
+  if (job.size) {
+    const px = exportPixels(job.size, choice.dpi);
+    fits = px.fits;
+    els.exportSize.textContent = t[fits ? 'export.size' : 'export.tooBig'](px.width, px.height);
+    els.exportSize.classList.toggle('error', !fits);
+  } else {
+    els.exportSize.textContent = '';
+  }
+
+  for (const el of els.exportDialog.querySelectorAll('input, select')) el.disabled = job.busy;
+  els.exportCancel.disabled = job.busy;
+  els.exportGo.disabled = job.busy || !job.size || !fits;
+  els.exportGo.textContent = t[job.busy ? 'export.busy' : 'export.go'];
+}
+
+async function doExport() {
+  const job = exportJob;
+  if (!job || job.busy || !job.size) return;
+  const choice = readExportChoice();
+  if (!exportPixels(job.size, choice.dpi).fits) return;
+  Object.assign(exportChoice, choice);
+
+  job.busy = true;
+  els.exportError.hidden = true;
+  showExportState();
+
+  let target = null;
+  try {
+    target = await window.reader.exportPick(job.session.id, job.page, choice.format);
+    if (!target) return; // передумали в диалоге — остаёмся в окне выбора
+
+    const mime = choice.format === 'jpeg' ? 'image/jpeg' : 'image/png';
+    let canvas = await renderPageImage(job.session.doc, job.page, choice.dpi, job.session.rotation);
+    if (!canvas) throw new Error(t['export.failed']('—'));
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, mime, choice.quality / 100));
+    // Канва в 600 dpi — сотни мегабайт; отпускаем сразу, не дожидаясь сборщика.
+    canvas.width = 0;
+    canvas.height = 0;
+    canvas = null;
+    if (!blob) throw new Error('canvas.toBlob');
+
+    const bytes = withDpi(new Uint8Array(await blob.arrayBuffer()), mime, choice.dpi);
+    const res = await window.reader.exportWrite(target.token, bytes);
+    target = null;
+    if (!res?.ok) throw new Error(res?.error || '');
+    if (exportJob === job) {
+      exportJob = null;
+      els.exportDialog.hidden = true;
+    }
+  } catch (err) {
+    els.exportError.textContent = t['export.failed'](err?.message || String(err));
+    els.exportError.hidden = false;
+  } finally {
+    // Жетон, по которому так ничего и не записали, сжигаем.
+    if (target) window.reader.exportWrite(target.token, null);
+    job.busy = false;
+    if (exportJob === job) showExportState();
+  }
+}
+
+function closeExportDialog() {
+  if (exportJob?.busy) return;
+  exportJob = null;
+  els.exportDialog.hidden = true;
+}
+
+/**
+ * Правый щелчок по странице ленты или по миниатюре. Меню рисует главный
+ * процесс; отсюда — только номер страницы и есть ли выделение для «Копировать».
+ */
+function onPageContextMenu(e) {
+  const host = e.target.closest?.('.page, .thumb');
+  if (!host || !state?.doc) return;
+  e.preventDefault();
+  const page = Number(host.dataset.page);
+  const selection = window.getSelection();
+  window.reader.pageMenu(page, Boolean(selection && !selection.isCollapsed && selection.toString().trim()));
+}
+
+// ---------------------------------------------------------------------------
 // Ввод
 // ---------------------------------------------------------------------------
 function bindUi() {
@@ -1419,6 +1588,20 @@ function bindUi() {
   $('print-cancel').addEventListener('click', closeDialogs);
   $('print-go').addEventListener('click', doPrint);
 
+  fillExportDpi();
+  els.exportCancel.addEventListener('click', closeExportDialog);
+  els.exportGo.addEventListener('click', doExport);
+  els.exportDialog.addEventListener('input', showExportState);
+  els.exportDialog.addEventListener('change', showExportState);
+  els.exportDialog.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !(e.target instanceof HTMLButtonElement)) {
+      e.preventDefault();
+      doExport();
+    }
+  });
+  els.scroller.addEventListener('contextmenu', onPageContextMenu);
+  els.thumbsHost.addEventListener('contextmenu', onPageContextMenu);
+
   // В показе щелчок листает вперёд — привычно по любой программе показа.
   els.scroller.addEventListener('click', (e) => {
     if (!ui.present || e.button !== 0) return;
@@ -1482,6 +1665,17 @@ function onKey(e) {
   if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.code === 'KeyL') {
     e.preventDefault();
     togglePresent();
+    return;
+  }
+
+  // Пока открыто окно поверх документа, клавиши — его: иначе в показе Enter и
+  // стрелки листали бы слайды за диалогом, а в ленте стрелки крутили бы её.
+  if (DIALOGS.some((d) => !d.hidden)) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      if (!els.exportDialog.hidden) closeExportDialog();
+      else closeDialogs();
+    }
     return;
   }
 
@@ -1678,6 +1872,7 @@ async function showRecent() {
 
 const menuCommands = {
   print: openPrintDialog,
+  'export:open': (payload) => openExportDialog(payload?.page),
   find: openFind,
   'find:next': () => stepHit(1),
   'zoom:in': () => state && setScale(zoomStop(state.scale, 1)),

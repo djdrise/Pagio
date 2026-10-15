@@ -203,6 +203,41 @@
       </div>
     </div>
 
+    <div id="export-dialog" class="modal" hidden>
+      <div class="modal-card export" role="dialog" aria-label="Сохранить как изображение">
+        <h2 id="export-title">Сохранить как изображение</h2>
+        <p id="export-page" class="export-page">Страница 1</p>
+        <fieldset class="group">
+          <legend id="export-format-legend">Формат</legend>
+          <label class="radio">
+            <input type="radio" name="export-format" value="png" checked />
+            <span id="export-png">PNG — без потерь</span>
+          </label>
+          <label class="radio">
+            <input type="radio" name="export-format" value="jpeg" />
+            <span id="export-jpeg">JPEG — файл меньше</span>
+          </label>
+        </fieldset>
+        <label class="field">
+          <span id="export-dpi-label">Разрешение</span>
+          <select id="export-dpi" class="select"></select>
+        </label>
+        <label id="export-quality-row" class="field" hidden>
+          <span id="export-quality-label">Качество JPEG</span>
+          <span class="range">
+            <input id="export-quality" type="range" min="50" max="100" step="5" value="90" />
+            <output id="export-quality-value" for="export-quality">90%</output>
+          </span>
+        </label>
+        <p id="export-size" class="export-size"></p>
+        <p id="export-error" class="error" hidden></p>
+        <div class="modal-buttons">
+          <button id="export-cancel" class="plain">Отмена</button>
+          <button id="export-go" class="primary">Сохранить…</button>
+        </div>
+      </div>
+    </div>
+
     <div id="prefs-dialog" class="modal" hidden>
       <div class="modal-card prefs" role="dialog" aria-label="Параметры">
         <h2 id="prefs-title">Параметры</h2>

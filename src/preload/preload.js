@@ -30,6 +30,17 @@ contextBridge.exposeInMainWorld('reader', {
   /** Страница печати сообщает, что все листы отрисованы. */
   printReady: () => ipcRenderer.send('print:ready'),
 
+  /** Контекстное меню страницы: по какой щёлкнули и есть ли что копировать. */
+  pageMenu: (page, canCopy) => ipcRenderer.send('ctx:page', { page, canCopy }),
+
+  /**
+   * Сохранение страницы картинкой в два шага. Сначала главный процесс
+   * спрашивает путь и отдаёт жетон — null, если человек передумал. Потом окно
+   * присылает байты по жетону; null вместо байтов сжигает жетон.
+   */
+  exportPick: (id, page, format) => ipcRenderer.invoke('export:pick', { id, page, format }),
+  exportWrite: (token, bytes) => ipcRenderer.invoke('export:write', { token, bytes }),
+
   /** Список недавних файлов для пустого экрана. */
   recent: () => ipcRenderer.invoke('recent:list'),
 

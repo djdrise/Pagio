@@ -13,6 +13,7 @@ const menu = {
     recentEmpty: 'Пусто',
     closeTab: 'Закрыть вкладку',
     print: 'Печать…',
+    exportImage: 'Сохранить страницу как изображение…',
     quit: 'Выход',
     edit: 'Правка',
     copy: 'Копировать',
@@ -39,6 +40,8 @@ const menu = {
     prevTab: 'Предыдущая вкладка',
     openTitle: 'Открыть PDF',
     openError: 'Не удалось открыть файл',
+    exportTitle: 'Сохранить как изображение',
+    exportName: (base, page) => `${base} — стр. ${page}`,
   },
   en: {
     file: 'File',
@@ -47,6 +50,7 @@ const menu = {
     recentEmpty: 'Empty',
     closeTab: 'Close tab',
     print: 'Print…',
+    exportImage: 'Save page as image…',
     quit: 'Quit',
     edit: 'Edit',
     copy: 'Copy',
@@ -73,6 +77,8 @@ const menu = {
     prevTab: 'Previous tab',
     openTitle: 'Open PDF',
     openError: 'Could not open the file',
+    exportTitle: 'Save as image',
+    exportName: (base, page) => `${base} — page ${page}`,
   },
 };
 

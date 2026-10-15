@@ -150,11 +150,45 @@ export async function renderPage(doc, n, cssWidth, signal, rotation = 0) {
     rotation: page.rotate + rotation,
   });
 
+  let canvas;
+  try {
+    canvas = await paint(page, viewport, signal);
+  } finally {
+    releasePage(doc, n);
+  }
+  if (!canvas) return null;
+  canvas.style.width = '100%';
+  canvas.style.height = '100%';
+  return {
+    canvas,
+    viewport: page.getViewport({
+      scale: cssWidth / base.width,
+      rotation: page.rotate + rotation,
+    }),
+  };
+}
+
+/**
+ * Рисует страницу для сохранения картинкой: в точном разрешении, без поправки
+ * на плотность экрана — 300 dpi означают 300 точек на дюйм листа, а не на дюйм
+ * монитора. Поворот тот же, что на экране: сохраняется то, что видно.
+ * @returns {Promise<HTMLCanvasElement>}
+ */
+export async function renderPageImage(doc, n, dpi, rotation = 0) {
+  const page = await acquirePage(doc, n);
+  try {
+    const viewport = page.getViewport({ scale: dpi / 72, rotation: page.rotate + rotation });
+    return await paint(page, viewport, null);
+  } finally {
+    releasePage(doc, n);
+  }
+}
+
+/** Канва по размеру viewport, белый лист и отрисовка; null — отменили. */
+async function paint(page, viewport, signal) {
   const canvas = document.createElement('canvas');
   canvas.width = Math.max(1, Math.floor(viewport.width));
   canvas.height = Math.max(1, Math.floor(viewport.height));
-  canvas.style.width = '100%';
-  canvas.style.height = '100%';
 
   const ctx = canvas.getContext('2d', { alpha: false });
   ctx.fillStyle = '#ffffff';
@@ -170,15 +204,8 @@ export async function renderPage(doc, n, cssWidth, signal, rotation = 0) {
     throw err;
   } finally {
     signal?.removeEventListener('abort', stop);
-    releasePage(doc, n);
   }
-  return {
-    canvas,
-    viewport: page.getViewport({
-      scale: cssWidth / base.width,
-      rotation: page.rotate + rotation,
-    }),
-  };
+  return canvas;
 }
 
 /** Размеры страницы при масштабе 1 — по ним строится лента. */
